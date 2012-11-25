@@ -5,45 +5,82 @@
 #include <node.h>
 #include <objectPool.h>
 #include <rect.h>
+#include <memManager.h>
 
 class QuadroMesh
 {
 private:
-	ObjectPool<Rect> rectsPool;
-	ObjectPool<Point> pointPool;
-	ObjectPool<NodeBack<Rect *> > nodeRectPool;
-	ObjectPool<NodeBack<Segment *> > nodeSegPool;
+	MemManager * memManager; // менеджер памяти
 
-	NodeBack<Rect *> * firstRect;
-	NodeBack<Rect *> * lastRect;
+	//прямоугольник, не пересекающие границу
+	NodeBack<Rect *> * rectPureF; //начало списка 
+	NodeBack<Rect *> * rectPureE; //конец списка 
+	int rectPureCnt;
 
-	NodeBack<Rect *> * buffer; //прямоугольники без ребер 
-	int bufCnt;
+	//прямоугольник, пересекающие границу
+	NodeBack<Rect *> * rectSegF; //начало списка 
+	NodeBack<Rect *> * rectSegE; //конец списка 
+	int rectSegCnt;
 
-	NodeBack<Rect *> * buffer2;//прямоугольники с ребрами 
-	int buf2Cnt;
-
-	Segment * border;
+	//ссылка на массив указателей на отрезки границы
+	Segment ** border;
 	int borderCnt;
 
+	//минимальный размер ребра прямоугольника
 	float stopLength;
 
-	void SplitRect();
-	bool Check();
-	void AddSegment(Rect * rect, Segment * seg);
-	void AddNeighbour(Rect * rect1, Rect * rect2);
-	void BreakReference(Rect * rect);
+	void FirstRect(Point ** pointsList, int count);//вычисление параметров для первого прямоугольника
+
+	//вычисление крайних точек границы. результат записывается 
+	//в верхнюю левую и нижнюю правую вершина первого прямоугольника 
+	void CalcEdges(Point * p1, Point * p3, Point ** pointsList, int count); 
+
+	//заполнение border
+	void CalcBorder(Point ** _border, int _borderCount);
+
+	//проверка условия продолжение измельчения сетки
+	bool IsCountinue();
+
+	//расщипление прямоугольникa
+	void SplitRect(Rect * rect);
+
+	//добавление нового прямоугольникак прямоугольнй сетке
+	//в замисимости от пересечения с границей в rectPureE или в rectPureE
 	void AddRect(Rect * rect);
-	void FreeRect(Rect * rect);
+
+	//добавление отрезка в список в прямоугольнике
+	void AddSegment(Rect * rect, Segment * seg);
+
+	//добавление соседей для прямоугольников
+	void AddNeighbour(Rect * rect1, Rect * rect2);
+
+	//удаление нод для отрезков и соседей внутри прямоугольника
+	void FreeNodeInRect(Rect * rect);
+
+	//удаление прямоугольника и ноды для него RemoveRect. переопределение ссылки rectSegCnt
 	void RemoveRect();
-	void Jump();
-	void RmOuter();
+
+	//проверка прямоугольника на прнадлежность области
+	bool IsRectInRegion(Rect * rect);
+
+	//удаление внешних к области прмоугольников
+	void RmOuterRects();
+
+	//сглаживание сетки
+	void Smoth();
+
+	//проверка прямоугольника на слишком мелких соседей
+	bool CheckRect(Rect *  rect);
+
+	
+	void BreakNeihbRef(Rect * rect);
+
+	void DropFromNeihb(Rect * fromRect, Rect * target);
 public:
 	void PrintInfo();
 	void Start();
 	void GetSegments(Segment ** resSeg, int * count);
-	QuadroMesh(Point * pointsList, int count, float _stopLength);
+	QuadroMesh(MemManager * _memMan, Point ** _border, int _borderCount, float _stopLength);
 	~QuadroMesh();
 };
-
 #endif

@@ -3,24 +3,28 @@
 #include "usesTypes.h"
 #include <node.h>
 #include <graphic.h>
-
-
 #include <rect.h>
+#include <memManager.h>
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+	MemManager memory; 
 	int pointCnt = 4;
-	Point point[] = {Point(1, 0), Point(8, 3), Point(5, 8), Point(0, 4)};
-	QuadroMesh mesh(point, pointCnt, 0.9);
+	Point ** point = (Point **) malloc(4 * sizeof(Point*));
+	point[0] = memory.NewPoint(1, 0);
+	point[1] = memory.NewPoint(8, 3);
+	point[2] = memory.NewPoint(5, 8);
+	point[3] = memory.NewPoint(0, 4);
+	QuadroMesh mesh(&memory, point, pointCnt, 1);
 	mesh.Start();
 	Segment * segToPlot;
 	int  segCnt;
 	mesh.GetSegments(&segToPlot, &segCnt);
 	Plot(segToPlot, segCnt);
 
-
+	//free(point);
 /*
 	Point * points = new Point[6];
 	points[3].x = 2; points[3].y = 6;

@@ -1,5 +1,4 @@
 #include "mathUtils.h"
-#include <math.h>
 
 const float EPSILON = 1E-5;
 

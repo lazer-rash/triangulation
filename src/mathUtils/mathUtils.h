@@ -1,6 +1,8 @@
 #ifndef _MATHUTILS_H_
 #define _MATHUTILS_H_
 
+#include <math.h>
+
 float Max(float a, float b);
 
 float Min(float a, float b);

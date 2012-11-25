@@ -4,7 +4,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <GL/freeglut.h>
-
+#include <iostream>
 Canvas *  currentCanv;
 
 void SetupRC();
@@ -64,5 +64,6 @@ void Plot(Segment * segToPlot,int  segCnt)
 {
 	Canvas canvas(segToPlot, segCnt);
 	currentCanv = &canvas;
+	cout<<"[1]"<<endl;
 	InitOpenGL();
 }

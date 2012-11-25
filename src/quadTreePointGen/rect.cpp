@@ -51,8 +51,8 @@ bool IsNeigbhour(Rect * rect1, Rect * rect2)
 	h1 = rect1->vertex[1]->y - rect1->vertex[2]->y;
 	w2 = rect1->vertex[1]->x - rect1->vertex[0]->x;
 	h2 = rect1->vertex[1]->y - rect1->vertex[2]->y;
-	cw = abs(rect1->vertex[3]->x - rect2->vertex[3]->x + 0.5 * (w1 -w2));
-	ch = abs(rect1->vertex[3]->y - rect2->vertex[3]->y + 0.5 * (h1 -h2));
+	cw = fabs(rect1->vertex[3]->x - rect2->vertex[3]->x + 0.5 * (w1 -w2));
+	ch = fabs(rect1->vertex[3]->y - rect2->vertex[3]->y + 0.5 * (h1 -h2));
 	if((cw <=(w1 + w2)) && ((ch <=(h1 + h2)))) return true;
 	return false;
 }
