@@ -30,10 +30,6 @@ Canvas::Canvas(Segment * _segToPlot, int _segCnt)
 		rightTop.y = Max(rightTop.y, Max(segToPlot[i].vertex[0]->y, segToPlot[i].vertex[1]->y));
 		leftBottom.x = Min(leftBottom.x, Min(segToPlot[i].vertex[0]->x, segToPlot[i].vertex[1]->x));
 		leftBottom.y = Min(leftBottom.y, Min(segToPlot[i].vertex[0]->y, segToPlot[i].vertex[1]->y));
-		//cout<<i<<endl;
 	}
-	rightTop.Print();
-	leftBottom.Print();
-	cout<<"[1]"<<endl;
 }
 

@@ -3,6 +3,7 @@
 
 void Rect::Print()
 {
+	cout<< "ref "<<this<<endl;
 	cout<<"  age: "<<age<<endl;
 	cout<<"  size: "<<size<<endl;
 	cout<<"  vertexes: "<<endl;
@@ -24,6 +25,15 @@ void Rect::Print()
 		cout<<endl<<"  ";
 	}
 	cout<<endl;	
+
+	NodeBack<Rect *> * tmp1 = firstNeighb;
+	cout<<"  neigbh: "<<endl;
+	while(tmp1 != 0)
+	{
+		cout<<" ref "<<tmp1->data<<" age "<<tmp1->data->age<<endl;
+		tmp1 = tmp1->prev;
+	}
+	cout<<endl;	
 }
 
 bool IsPointInRect(Rect * rect, Point * point)
@@ -38,23 +48,30 @@ bool IsPointInRect(Rect * rect, Point * point)
 bool IsNeigbhour(Rect * rect1, Rect * rect2)
 {
 	for (int i = 0; i < 4; ++i)
-	{
 		for (int j = 0; j < 4; ++j)
 		{
-			if (rect1->vertex[i] == rect1->vertex[j])
+			if (rect1->vertex[i] == rect2->vertex[j])
 				return true;
 		}
-	}
 
-	float w1, h1, w2, h2, ch, cw;
-	w1 = rect1->vertex[1]->x - rect1->vertex[0]->x;
-	h1 = rect1->vertex[1]->y - rect1->vertex[2]->y;
-	w2 = rect1->vertex[1]->x - rect1->vertex[0]->x;
-	h2 = rect1->vertex[1]->y - rect1->vertex[2]->y;
-	cw = fabs(rect1->vertex[3]->x - rect2->vertex[3]->x + 0.5 * (w1 -w2));
-	ch = fabs(rect1->vertex[3]->y - rect2->vertex[3]->y + 0.5 * (h1 -h2));
-	if((cw <=(w1 + w2)) && ((ch <=(h1 + h2)))) return true;
-	return false;
+	float cx1, cx2, cy1,cy2, halfw1, halfw2, halfh1, halfh2;
+	//центры прямоугольников
+	halfw1 = (rect1->vertex[2]->x - rect1->vertex[3]->x) / 2;
+	halfh1 = (rect1->vertex[0]->y - rect1->vertex[3]->y) / 2;
+	halfw2 = (rect2->vertex[2]->x - rect2->vertex[3]->x) / 2;
+	halfh2 = (rect2->vertex[0]->y - rect2->vertex[3]->y) / 2;
+	cx1 = rect1->vertex[3]->x + halfw1;
+	cy1 = rect1->vertex[3]->y + halfh1;
+	cx2 = rect2->vertex[3]->x + halfw2;
+	cy2 = rect2->vertex[3]->y + halfh2;
+
+	//для соседства прямоугольников нужно fabs(cx1 - cx2) == (halfw1 + halfw2)
+	//но из-за погрешностей 
+	//расстояние по горизонтали между центрами
+	if(fabs(cx1 - cx2) > 1.1 * (halfw1 + halfw2)) return false;
+	if(fabs(cy1 - cy2) > 1.1 * (halfh1 + halfh2)) return false;
+
+	return true;
 }
 
 bool IsSegmetCrosRect(Rect * rect,Segment * seg)

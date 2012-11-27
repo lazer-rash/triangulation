@@ -46,7 +46,7 @@ private:
 
 	//добавление нового прямоугольникак прямоугольнй сетке
 	//в замисимости от пересечения с границей в rectPureE или в rectPureE
-	void AddRect(Rect * rect);
+	void AddRect(Rect * rect, Rect * root);
 
 	//добавление отрезка в список в прямоугольнике
 	void AddSegment(Rect * rect, Segment * seg);
@@ -62,9 +62,6 @@ private:
 
 	//проверка прямоугольника на прнадлежность области
 	bool IsRectInRegion(Rect * rect);
-
-	//удаление внешних к области прмоугольников
-	void RmOuterRects();
 
 	//сглаживание сетки
 	void Smoth();

@@ -62,8 +62,8 @@ void ReadSegGL()
 
 void Plot(Segment * segToPlot,int  segCnt)
 {
+	cout<<"Plot"<<endl;
 	Canvas canvas(segToPlot, segCnt);
 	currentCanv = &canvas;
-	cout<<"[1]"<<endl;
 	InitOpenGL();
 }

@@ -123,8 +123,8 @@ void QuadroMesh::Start()
 		SplitRect(rectSegF->data);
 		RemoveRect();
 	}
-	RmOuterRects();
-	//Smoth();
+	Smoth();
+	cout<<"Rects count "<<(rectPureCnt + rectSegCnt)<<endl;
 }
 
 void QuadroMesh::SplitRect(Rect * rect)
@@ -179,14 +179,13 @@ void QuadroMesh::SplitRect(Rect * rect)
 		tmp = tmp->prev;
 	}
 
-	for (int i = 0; i < 4; ++i) AddRect(newRects[i]);
-
 	AddNeighbour(newRects[0],newRects[1]);
 	AddNeighbour(newRects[0],newRects[2]);
 	AddNeighbour(newRects[0],newRects[3]);
 	AddNeighbour(newRects[1],newRects[2]);
 	AddNeighbour(newRects[1],newRects[3]);
 	AddNeighbour(newRects[2],newRects[3]);
+
 	NodeBack<Rect *> * tmpRect = rect->firstNeighb;
 	while(tmpRect != NULL)
 	{
@@ -199,12 +198,23 @@ void QuadroMesh::SplitRect(Rect * rect)
 		}
 		tmpRect = tmpRect->prev;
 	}
+
+	for (int i = 0; i < 4; ++i)
+	{
+		AddRect(newRects[i], rect);
+	}
 }
 
-void QuadroMesh::AddRect(Rect * rect)
+void QuadroMesh::AddRect(Rect * rect, Rect * root)
 {
 	if(rect->firstSeg == 0)
 	{
+		if((root->firstSeg != 0) and (!IsRectInRegion(rect)))
+		{
+			FreeNodeInRect(rect);
+			memManager->DelObjRect(rect);
+			return;
+		}
 		if(rectPureE == 0) rectPureE = rectPureF = memManager->NewNodeRect(rect);
 		else 
 		{
@@ -245,14 +255,14 @@ void QuadroMesh::FreeNodeInRect(Rect * rect)
 {
 	BreakNeihbRef(rect);
 	NodeBack<Rect *> * tmpRect = rect->firstNeighb;
-	while(tmpRect != NULL)
+	while(tmpRect != 0)
 	{
 		memManager->DelObjNodeRect(tmpRect);
 		tmpRect = tmpRect->prev;
 	}
 
 	NodeBack<Segment *> * tmpSeg = rect->firstSeg;
-	while(tmpSeg != NULL)
+	while(tmpSeg != 0)
 	{
 		memManager->NewNodeSeg(tmpSeg->data);
 		tmpSeg = tmpSeg->prev;
@@ -279,37 +289,6 @@ bool QuadroMesh::IsRectInRegion(Rect * rect)
 	return true;
 }
 
-void QuadroMesh::RmOuterRects()
-{
-	cout<<"RmOuterRects"<<endl;
-	NodeBack<Rect *> * curRect = rectPureF;
-	NodeBack<Rect *> * tmp = curRect;
-	NodeBack<Rect *> * trash;
-	while(curRect != 0)
-	{
-		if(!IsRectInRegion(curRect->data))
-		{
-			rectPureCnt--;
-			FreeNodeInRect(tmp->data);
-			trash = tmp;
-			if(tmp == rectPureF)
-			{	
-				rectPureF = rectPureF->prev;
-				curRect = tmp = rectPureF;
-			}
-			else tmp->prev = curRect = curRect->prev;
-			memManager->DelObjRect(trash->data);
-			memManager->DelObjNodeRect(trash);
-		}
-		else
-		{
-			tmp->prev = curRect;
-			tmp = tmp->prev;
-			curRect = curRect->prev;
-		}
-	}
-}
-
 void QuadroMesh::Smoth()
 {
 	cout<<"Smoth"<<endl;
@@ -321,8 +300,9 @@ void QuadroMesh::Smoth()
 		if(!CheckRect(tmp->data))
 		{
 			allright = false;
+			rectPureCnt--;
 			SplitRect(tmp->data);
-			FreeNodeInRect(rectSegF->data);
+			FreeNodeInRect(tmp->data);
 			if(tmp == rectPureF)
 			{
 				rectPureF = tmp->prev;
@@ -341,10 +321,10 @@ void QuadroMesh::Smoth()
 		}
 		else
 		{
-			tmp2->prev = tmp;
+			tmp2 = tmp;
 			tmp = tmp2->prev;
 		}
-		if((tmp == 0) && (!allright)) tmp = rectPureF;
+		if((tmp == 0) && (!allright)) {tmp = tmp2 = rectPureF; allright = true;}
 	}
 }
 
@@ -353,7 +333,8 @@ bool QuadroMesh::CheckRect(Rect *  rect)
 	NodeBack<Rect *> * tmp = rect->firstNeighb;
 	while(tmp != 0)
 	{
-		if(rect->age - tmp->data->age < -1) return false;
+		if(rect->age - tmp->data->age < -1) 
+			return false;
 		tmp = tmp->prev; 
 	}
 	return true;
@@ -365,34 +346,55 @@ void QuadroMesh::BreakNeihbRef(Rect * rect)
 	NodeBack<Rect *> * tmp = rect->firstNeighb;
 	while(tmp != 0)
 	{
+		//пробегаем по всем соседям и удаляем себя из их списаа соседей
 		DropFromNeihb(tmp->data, rect);
 		tmp = tmp->prev;
 	}
 }
 
+//удаление из соседей fromRect ссылку на target
 void QuadroMesh::DropFromNeihb(Rect * fromRect, Rect * target)
 {
+	//если вписок соседей пустой, то выходим
 	if(fromRect->firstNeighb == 0) return;
-	NodeBack<Rect *> * tmp;
-	if(fromRect->firstNeighb->data == target)
-	{
-		tmp = fromRect->firstNeighb;
-		fromRect->firstNeighb = fromRect->firstNeighb->prev;
-		memManager->DelObjNodeRect(tmp);
-		return;
-	}
-	tmp = fromRect->firstNeighb->prev;
-	NodeBack<Rect *> * tmp1 = fromRect->firstNeighb;
+
+	NodeBack<Rect *> * tmp = fromRect->firstNeighb;
+	NodeBack<Rect *> * tmp1 = tmp;
 	while(tmp != 0)
 	{
 		if(tmp->data == target)
 		{
-			tmp1->prev = tmp->prev;
+			if(tmp == fromRect->firstNeighb)
+				fromRect->firstNeighb = fromRect->firstNeighb->prev;
+			else
+				tmp1->prev = tmp->prev;
 			memManager->DelObjNodeRect(tmp);
 			return;
 		}
-		tmp1 = tmp;
+		{
+			tmp1 = tmp;
+			tmp = tmp1->prev;
+		}
+	}
+}
+
+void QuadroMesh::PrintInfo()
+{
+	cout<<"Pure "<<endl<<"count "<<rectPureCnt<<endl;
+	NodeBack<Rect *> * tmp = rectPureF;
+	while(tmp != 0)
+	{
+		tmp->data->Print();
+		cout<<endl;
 		tmp = tmp->prev;
 	}
 
+	cout<<"Seg "<<endl<<"count "<<rectSegCnt<<endl;
+	tmp = rectSegF;
+	while(tmp != 0)
+	{
+		tmp->data->Print();
+		cout<<endl;
+		tmp = tmp->prev;
+	}
 }
