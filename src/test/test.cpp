@@ -25,5 +25,5 @@ int main(int argc, char *argv[])
 	int  segCnt;
 	mesh.GetSegments(&segToPlot, &segCnt);
 	Plot(segToPlot, segCnt);
-	return 0; 
+	return 0;
 }
